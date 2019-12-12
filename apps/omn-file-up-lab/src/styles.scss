@@ -1,0 +1,9 @@
+$fa-font-path: "../../../node_modules/@fortawesome/fontawesome-free/webfonts";
+@import 'variables';
+@import '~bootstrap/scss/bootstrap';
+@import "~@fortawesome/fontawesome-free/scss/fontawesome";
+// You need to load the font-face
+@import "~@fortawesome/fontawesome-free/scss/solid";
+@import "~@fortawesome/fontawesome-free/scss/brands";
+@import "~@fortawesome/fontawesome-free/scss/regular";
+@import '~ngx-toastr/toastr.css';

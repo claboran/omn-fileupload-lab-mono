@@ -7,5 +7,15 @@
     "tslint.json": "*",
     "nx.json": "*"
   },
-  "projects": {}
+  "projects": {
+    "omn-file-up-lab-e2e": {
+      "tags": []
+    },
+    "omn-file-up-lab": {
+      "tags": []
+    },
+    "file-upload-lib": {
+      "tags": []
+    }
+  }
 }

@@ -1,7 +1,172 @@
 {
   "version": 1,
-  "projects": {},
+  "projects": {
+    "omn-file-up-lab": {
+      "projectType": "application",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "apps/omn-file-up-lab",
+      "sourceRoot": "apps/omn-file-up-lab/src",
+      "prefix": "omn-file-upload",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/apps/omn-file-up-lab",
+            "index": "apps/omn-file-up-lab/src/index.html",
+            "main": "apps/omn-file-up-lab/src/main.ts",
+            "polyfills": "apps/omn-file-up-lab/src/polyfills.ts",
+            "tsConfig": "apps/omn-file-up-lab/tsconfig.app.json",
+            "aot": false,
+            "assets": [
+              "apps/omn-file-up-lab/src/favicon.ico",
+              "apps/omn-file-up-lab/src/assets"
+            ],
+            "styles": ["apps/omn-file-up-lab/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/omn-file-up-lab/src/environments/environment.ts",
+                  "with": "apps/omn-file-up-lab/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "omn-file-up-lab:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "omn-file-up-lab:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "omn-file-up-lab:build"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "apps/omn-file-up-lab/tsconfig.app.json",
+              "apps/omn-file-up-lab/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!apps/omn-file-up-lab/**"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "apps/omn-file-up-lab/jest.config.js",
+            "tsConfig": "apps/omn-file-up-lab/tsconfig.spec.json",
+            "setupFile": "apps/omn-file-up-lab/src/test-setup.ts"
+          }
+        }
+      }
+    },
+    "omn-file-up-lab-e2e": {
+      "root": "apps/omn-file-up-lab-e2e",
+      "sourceRoot": "apps/omn-file-up-lab-e2e/src",
+      "projectType": "application",
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "apps/omn-file-up-lab-e2e/cypress.json",
+            "tsConfig": "apps/omn-file-up-lab-e2e/tsconfig.e2e.json",
+            "devServerTarget": "omn-file-up-lab:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "omn-file-up-lab:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": ["apps/omn-file-up-lab-e2e/tsconfig.e2e.json"],
+            "exclude": ["**/node_modules/**", "!apps/omn-file-up-lab-e2e/**"]
+          }
+        }
+      }
+    },
+    "file-upload-lib": {
+      "projectType": "library",
+      "root": "libs/file-upload-lib",
+      "sourceRoot": "libs/file-upload-lib/src",
+      "prefix": "omn-file-upload",
+      "architect": {
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/file-upload-lib/tsconfig.lib.json",
+              "libs/file-upload-lib/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**", "!libs/file-upload-lib/**"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "options": {
+            "jestConfig": "libs/file-upload-lib/jest.config.js",
+            "tsConfig": "libs/file-upload-lib/tsconfig.spec.json",
+            "setupFile": "libs/file-upload-lib/src/test-setup.ts"
+          }
+        }
+      },
+      "schematics": {
+        "@nrwl/angular:component": {
+          "styleext": "scss"
+        }
+      }
+    }
+  },
   "cli": {
-    "defaultCollection": "@nrwl/workspace"
-  }
+    "defaultCollection": "@nrwl/angular"
+  },
+  "schematics": {
+    "@nrwl/angular:application": {
+      "unitTestRunner": "jest",
+      "e2eTestRunner": "cypress"
+    },
+    "@nrwl/angular:library": {
+      "unitTestRunner": "jest"
+    }
+  },
+  "defaultProject": "omn-file-up-lab"
 }

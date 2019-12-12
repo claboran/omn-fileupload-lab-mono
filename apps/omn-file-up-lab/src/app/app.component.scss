@@ -1,0 +1,30 @@
+.app {
+
+  &__button {
+    width: 125px;
+  }
+  &__file-list {
+    min-height: 600px;
+  }
+
+  &__file-list-items {
+    width: 100%;
+  }
+
+  &__drop-zone {
+    width: 100%;
+    background: repeating-linear-gradient(
+        45deg,
+        #c3c3c3,
+        #c3c3c3 10px,
+        #8b8b8b 10px,
+        #8b8b8b 20px
+    );
+    flex-grow: 1;
+  }
+
+  &__drop-zone--over {
+    border: dotted 5px green;
+    flex-grow: 1;
+  }
+}
