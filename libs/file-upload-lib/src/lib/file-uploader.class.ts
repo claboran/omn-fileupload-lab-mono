@@ -95,26 +95,26 @@ export class FileUploader {
   }
 
   public addToQueue(files: File[], options?: FileUploaderOptions, filters?: FilterFunction[] | string): void {
-    let list: File[] = [];
-    for (let file of files) {
+    const list: File[] = [];
+    for (const file of files) {
       list.push(file);
     }
-    let arrayOfFilters = this._getFilters(filters);
-    let count = this.queue.length;
-    let addedFileItems: FileItem[] = [];
+    const arrayOfFilters = this._getFilters(filters);
+    const count = this.queue.length;
+    const addedFileItems: FileItem[] = [];
     list.map((some: File) => {
       if (!options) {
         options = this.options;
       }
 
-      let temp = new FileLikeObject(some);
+      const temp = new FileLikeObject(some);
       if (this._isValidFile(temp, arrayOfFilters, options)) {
-        let fileItem = new FileItem(this, some, options);
+        const fileItem = new FileItem(this, some, options);
         addedFileItems.push(fileItem);
         this.queue.push(fileItem);
         this._onAfterAddingFile(fileItem);
       } else {
-        let filter = arrayOfFilters[ this._failFilterIndex ];
+        const filter = arrayOfFilters[ this._failFilterIndex ];
         this._onWhenAddingFileFailed(temp, filter, options);
       }
     });

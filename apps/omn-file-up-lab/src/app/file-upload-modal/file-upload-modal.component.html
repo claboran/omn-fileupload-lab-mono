@@ -1,0 +1,34 @@
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-info-circle mr-2"></i>File Upload Info</h3>
+  </div>
+  <div class="card-body">
+    <div class="ml-2">
+      <div class="small">
+        Upload Queue:
+      </div>
+      <div>
+          <span
+            class="badge badge-pill badge-primary small"
+            *ngFor="let item of fileUploader.queue">
+            {{ item?.file?.name }}
+          </span>
+      </div>
+    </div>
+
+  </div>
+  <div class="card-footer">
+    <button type="button" class="btn btn-warning global__button"
+            (click)="fileUploader.cancelAll()" [disabled]="!fileUploader.isUploading">
+      <i class="fas fa-ban mr-1"></i>Cancel all
+    </button>
+    <button type="button" class="btn btn-danger global__button ml-2"
+            (click)="fileUploader.clearQueue()" [disabled]="!fileUploader.queue.length">
+      <i class="far fa-trash-alt mr-1"></i>Remove all
+    </button>
+    <button class="btn btn-outline-primary global__button ml-2"
+            (click)="onClose()">
+      <i class="fas fa-times mr-1"></i>Dismiss
+    </button>
+  </div>
+</div>

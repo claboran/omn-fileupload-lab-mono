@@ -1,4 +1,3 @@
-<!--The content below is only a placeholder and can be replaced.-->
 <div style="text-align:center">
   <h1>
     <i class="fab fa-angular mr-1"></i>Welcome to {{ title }}!<i class="fab fa-angular ml-1"></i>
@@ -12,37 +11,20 @@
     </div>
     <div class="d-flex card-body">
       <div>
-        <button class="btn btn-primary app__button" (click)="fileInput.click()">Choose File</button>
+        <button class="btn btn-primary global__button" (click)="fileInput.click()">Choose File</button>
         <input #fileInput type="file" name="image"
                ng2FileSelect
                [uploader]="uploader"
                multiple
                accept="image/x-png,image/gif,image/jpeg" [ngStyle]="{'display': 'none'}"/>
-        <button class="btn btn-success app__button ml-2"
-                (click)="uploader.uploadAll()"
-                [disabled]="!uploader.getNotUploadedItems().length">
-          <i class="fas fa-cloud-upload-alt mr-1"></i>Upload
+        <button type="button"
+                class="btn btn-outline-primary global__button ml-2"
+                (click)="openInfoModal()"
+                [disabled]="!uploader.queue.length">
+          <i class="fas fa-info-circle mr-1"></i>
+          Details
+          <span class="badge badge-danger ml-1">{{uploader.queue.length}}</span>
         </button>
-        <button type="button" class="btn btn-warning app__button ml-2"
-                (click)="uploader.cancelAll()" [disabled]="!uploader.isUploading">
-          <i class="fas fa-ban mr-1"></i>Cancel all
-        </button>
-        <button type="button" class="btn btn-danger app__button ml-2"
-                (click)="uploader.clearQueue()" [disabled]="!uploader.queue.length">
-          <i class="far fa-trash-alt mr-1"></i>Remove all
-        </button>
-      </div>
-      <div class="ml-2">
-        <div class="small">
-          Upload Queue:
-        </div>
-        <div>
-          <span
-            class="badge badge-pill badge-primary small"
-            *ngFor="let item of uploader.queue">
-            {{ item?.file?.name }}
-          </span>
-        </div>
       </div>
     </div>
   </div>
