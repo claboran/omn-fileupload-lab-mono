@@ -1,1 +1,20 @@
-<p>file-upload-info-item works!</p>
+<div class="row mt-3">
+  <div class="col-3 align-content-center">
+    <span class="badge badge-pill badge-primary small">{{ item?.file?.name }}</span>
+  </div>
+  <div class="col-2 align-content-center">
+    <button type="button" class="btn btn-warning btn-sm"
+            (click)="item.cancel()" [disabled]="!item.isUploading">
+      <i class="fas fa-ban"></i>Cancel
+    </button>
+  </div>
+  <div class="col-2 align-content-center">
+    <button type="button" class="btn btn-danger btn-sm"
+            (click)="item.remove()" [disabled]="item.isUploading">
+      <i class="far fa-trash-alt"></i>Remove
+    </button>
+  </div>
+  <div class="col-5 p-1">
+    <progressbar [striped]="true" [animate]="true" [value]="item.progress"></progressbar>
+  </div>
+</div>

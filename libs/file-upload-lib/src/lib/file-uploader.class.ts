@@ -12,12 +12,12 @@ export interface Headers {
   value: string;
 }
 
-export type ParsedResponseHeaders = { [ headerFieldName: string ]: string };
+export interface ParsedResponseHeaders { [ headerFieldName: string ]: string }
 
-export type FilterFunction = {
+export interface FilterFunction {
   name: string,
   fn: (item?: FileLikeObject, options?: FileUploaderOptions) => boolean
-};
+}
 
 export interface FileUploaderOptions {
   allowedMimeType?: string[];
@@ -44,10 +44,10 @@ export interface FileUploaderOptions {
 export class FileUploader {
 
   public authToken: string;
-  public isUploading: boolean = false;
+  public isUploading = false;
   public queue: FileItem[] = [];
-  public progress: number = 0;
-  public _nextIndex: number = 0;
+  public progress = 0;
+  public _nextIndex = 0;
   public autoUpload: any;
   public authTokenHeader: string;
   public response: EventEmitter<any>;
@@ -129,8 +129,8 @@ export class FileUploader {
   }
 
   public removeFromQueue(value: FileItem): void {
-    let index = this.getIndexOfItem(value);
-    let item = this.queue[ index ];
+    const index = this.getIndexOfItem(value);
+    const item = this.queue[ index ];
     if (item.isUploading) {
       item.cancel();
     }
@@ -146,9 +146,9 @@ export class FileUploader {
   }
 
   public uploadItem(value: FileItem): void {
-    let index = this.getIndexOfItem(value);
-    let item = this.queue[ index ];
-    let transport = this.options.isHTML5 ? '_xhrTransport' : '_iframeTransport';
+    const index = this.getIndexOfItem(value);
+    const item = this.queue[ index ];
+    const transport = this.options.isHTML5 ? '_xhrTransport' : '_iframeTransport';
     item._prepareToUploading();
     if (this.isUploading) {
       return;
@@ -158,16 +158,16 @@ export class FileUploader {
   }
 
   public cancelItem(value: FileItem): void {
-    let index = this.getIndexOfItem(value);
-    let item = this.queue[ index ];
-    let prop = this.options.isHTML5 ? item._xhr : item._form;
+    const index = this.getIndexOfItem(value);
+    const item = this.queue[ index ];
+    const prop = this.options.isHTML5 ? item._xhr : item._form;
     if (item && item.isUploading) {
       prop.abort();
     }
   }
 
   public uploadAll(): void {
-    let items = this.getNotUploadedItems().filter((item: FileItem) => !item.isUploading);
+    const items = this.getNotUploadedItems().filter((item: FileItem) => !item.isUploading);
     if (!items.length) {
       return;
     }
@@ -176,7 +176,7 @@ export class FileUploader {
   }
 
   public cancelAll(): void {
-    let items = this.getNotUploadedItems();
+    const items = this.getNotUploadedItems();
     items.map((item: FileItem) => item.cancel());
   }
 
@@ -275,7 +275,7 @@ export class FileUploader {
   public _onCompleteItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void {
     item._onComplete(response, status, headers);
     this.onCompleteItem(item, response, status, headers);
-    let nextItem = this.getReadyItems()[ 0 ];
+    const nextItem = this.getReadyItems()[ 0 ];
     this.isUploading = false;
     if (nextItem) {
       nextItem.upload();
@@ -296,8 +296,8 @@ export class FileUploader {
   }
 
   protected _xhrTransport(item: FileItem): any {
-    let that = this;
-    let xhr = item._xhr = new XMLHttpRequest();
+    const that = this;
+    const xhr = item._xhr = new XMLHttpRequest();
     let sendable: any;
     this._onBeforeUploadItem(item);
 
@@ -333,38 +333,38 @@ export class FileUploader {
     }
 
     xhr.upload.onprogress = (event: any) => {
-      let progress = Math.round(event.lengthComputable ? event.loaded * 100 / event.total : 0);
+      const progress = Math.round(event.lengthComputable ? event.loaded * 100 / event.total : 0);
       this._onProgressItem(item, progress);
     };
     xhr.onload = () => {
-      let headers = this._parseHeaders(xhr.getAllResponseHeaders());
-      let response = this._transformResponse(xhr.response, headers);
-      let gist = this._isSuccessCode(xhr.status) ? 'Success' : 'Error';
-      let method = '_on' + gist + 'Item';
+      const headers = this._parseHeaders(xhr.getAllResponseHeaders());
+      const response = this._transformResponse(xhr.response, headers);
+      const gist = this._isSuccessCode(xhr.status) ? 'Success' : 'Error';
+      const method = '_on' + gist + 'Item';
       (this as any)[ method ](item, response, xhr.status, headers);
       this._onCompleteItem(item, response, xhr.status, headers);
     };
     xhr.onerror = () => {
-      let headers = this._parseHeaders(xhr.getAllResponseHeaders());
-      let response = this._transformResponse(xhr.response, headers);
+      const headers = this._parseHeaders(xhr.getAllResponseHeaders());
+      const response = this._transformResponse(xhr.response, headers);
       this._onErrorItem(item, response, xhr.status, headers);
       this._onCompleteItem(item, response, xhr.status, headers);
     };
     xhr.onabort = () => {
-      let headers = this._parseHeaders(xhr.getAllResponseHeaders());
-      let response = this._transformResponse(xhr.response, headers);
+      const headers = this._parseHeaders(xhr.getAllResponseHeaders());
+      const response = this._transformResponse(xhr.response, headers);
       this._onCancelItem(item, response, xhr.status, headers);
       this._onCompleteItem(item, response, xhr.status, headers);
     };
     xhr.open(item.method, item.url, true);
     xhr.withCredentials = item.withCredentials;
     if (this.options.headers) {
-      for (let header of this.options.headers) {
+      for (const header of this.options.headers) {
         xhr.setRequestHeader(header.name, header.value);
       }
     }
     if (item.headers.length) {
-      for (let header of item.headers) {
+      for (const header of item.headers) {
         xhr.setRequestHeader(header.name, header.value);
       }
     }
@@ -390,10 +390,10 @@ export class FileUploader {
     if (this.options.removeAfterUpload) {
       return value;
     }
-    let notUploaded = this.getNotUploadedItems().length;
-    let uploaded = notUploaded ? this.queue.length - notUploaded : this.queue.length;
-    let ratio = 100 / this.queue.length;
-    let current = value * ratio / 100;
+    const notUploaded = this.getNotUploadedItems().length;
+    const uploaded = notUploaded ? this.queue.length - notUploaded : this.queue.length;
+    const ratio = 100 / this.queue.length;
+    const current = value * ratio / 100;
     return Math.round(uploaded * ratio + current);
   }
 
@@ -405,7 +405,7 @@ export class FileUploader {
       return filters;
     }
     if (typeof filters === 'string') {
-      let names = filters.match(/[^\s,]+/g);
+      const names = filters.match(/[^\s,]+/g);
       return this.options.filters
         .filter((filter: any) => names.indexOf(filter.name) !== -1);
     }
@@ -437,7 +437,7 @@ export class FileUploader {
   }
 
   protected _parseHeaders(headers: string): ParsedResponseHeaders {
-    let parsed: any = {};
+    const parsed: any = {};
     let key: any;
     let val: any;
     let i: any;
@@ -478,7 +478,7 @@ export class FileUploader {
   }
 
   protected _onProgressItem(item: FileItem, progress: any): void {
-    let total = this._getTotalProgress(progress);
+    const total = this._getTotalProgress(progress);
     this.progress = total;
     item._onProgress(progress);
     this.onProgressItem(item, progress);
