@@ -15,7 +15,7 @@ export class FileSelectDirective {
   }
 
   public getOptions(): any {
-    return this._uploader.options;
+    return this._uploader.getOptions();
   }
 
   public getFilters(): any {

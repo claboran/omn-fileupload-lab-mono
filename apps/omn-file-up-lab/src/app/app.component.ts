@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {ToastrService} from 'ngx-toastr';
 import {WindowRefService} from './window-ref.service';
 import {environment} from '../environments/environment';
-import { FileUploader } from '@omn-file-upload/file-upload-lib';
+import { FileUploader, xhrTransportFn } from '@omn-file-upload/file-upload-lib';
 import { BsModalService } from 'ngx-bootstrap';
 import { FileUploadModalState } from './file-upload-modal/modal-state';
 import { FileUploadModalComponent } from './file-upload-modal/file-upload-modal.component';
@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
     autoUpload: true,
     itemAlias: 'file',
     removeAfterUpload: true
-  });
+  }, xhrTransportFn);
 
   private _filesTransferred: string[] = [];
   private _hasBaseDropZoneOver = false;

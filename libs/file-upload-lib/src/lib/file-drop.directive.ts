@@ -4,9 +4,9 @@ import { FileUploader, FileUploaderOptions } from './file-uploader.class';
 
 @Directive({ selector: '[ng2FileDrop]' })
 export class FileDropDirective {
-  @Input() public uploader: FileUploader;
-  @Output() public fileOver: EventEmitter<any> = new EventEmitter();
-  @Output() public onFileDrop: EventEmitter<File[]> = new EventEmitter<File[]>();
+  private _uploader: FileUploader;
+  private _fileOver: EventEmitter<any> = new EventEmitter();
+  private _fileDrop: EventEmitter<File[]> = new EventEmitter<File[]>();
 
   protected element: ElementRef;
 
@@ -15,7 +15,7 @@ export class FileDropDirective {
   }
 
   public getOptions(): FileUploaderOptions {
-    return this.uploader.options;
+    return this._uploader.getOptions();
   }
 
   public getFilters(): any {
@@ -24,29 +24,29 @@ export class FileDropDirective {
 
   @HostListener('drop', [ '$event' ])
   public onDrop(event: any): void {
-    let transfer = this._getTransfer(event);
+    const transfer = this._getTransfer(event);
     if (!transfer) {
       return;
     }
 
-    let options = this.getOptions();
-    let filters = this.getFilters();
+    const options = this.getOptions();
+    const filters = this.getFilters();
     this._preventAndStop(event);
-    this.uploader.addToQueue(transfer.files, options, filters);
-    this.fileOver.emit(false);
-    this.onFileDrop.emit(transfer.files);
+    this._uploader.addToQueue(transfer.files, options, filters);
+    this._fileOver.emit(false);
+    this._fileDrop.emit(transfer.files);
   }
 
   @HostListener('dragover', [ '$event' ])
   public onDragOver(event: any): void {
-    let transfer = this._getTransfer(event);
+    const transfer = this._getTransfer(event);
     if (!this._haveFiles(transfer.types)) {
       return;
     }
 
     transfer.dropEffect = 'copy';
     this._preventAndStop(event);
-    this.fileOver.emit(true);
+    this._fileOver.emit(true);
   }
 
   @HostListener('dragleave', [ '$event' ])
@@ -58,7 +58,7 @@ export class FileDropDirective {
     }
 
     this._preventAndStop(event);
-    this.fileOver.emit(false);
+    this._fileOver.emit(false);
   }
 
   protected _getTransfer(event: any): any {
@@ -82,5 +82,24 @@ export class FileDropDirective {
     } else {
       return false;
     }
+  }
+
+  get uploader(): FileUploader {
+    return this._uploader;
+  }
+
+  @Input()
+  set uploader(value: FileUploader) {
+    this._uploader = value;
+  }
+
+  @Output()
+  get fileOver(): EventEmitter<any> {
+    return this._fileOver;
+  }
+
+  @Output()
+  get fileDrop(): EventEmitter<File[]> {
+    return this._fileDrop;
   }
 }

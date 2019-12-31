@@ -5,18 +5,18 @@ export class FileItem {
   public file: FileLikeObject;
   public _file: File;
   public alias: string;
-  public url: string = '/';
+  public url = '/';
   public method: string;
   public headers: any = [];
-  public withCredentials: boolean = true;
+  public withCredentials = true;
   public formData: any = [];
-  public isReady: boolean = false;
-  public isUploading: boolean = false;
-  public isUploaded: boolean = false;
-  public isSuccess: boolean = false;
-  public isCancel: boolean = false;
-  public isError: boolean = false;
-  public progress: number = 0;
+  public isReady = false;
+  public isUploading = false;
+  public isUploaded = false;
+  public isSuccess = false;
+  public isCancel = false;
+  public isError = false;
+  public progress = 0;
   public index: number = void 0;
   public _xhr: XMLHttpRequest;
   public _form: any;
@@ -31,11 +31,11 @@ export class FileItem {
     this.options = options;
     this.file = new FileLikeObject(some);
     this._file = some;
-    if (uploader.options) {
-      this.method = uploader.options.method || 'POST';
-      this.alias = uploader.options.itemAlias || 'file';
+    if (uploader.getOptions()) {
+      this.method = uploader.getOptions().method || 'POST';
+      this.alias = uploader.getOptions().itemAlias || 'file';
     }
-    this.url = uploader.options.url;
+    this.url = uploader.getOptions().url;
   }
 
   public upload(): void {
@@ -142,7 +142,7 @@ export class FileItem {
   public _onComplete(response: string, status: number, headers: ParsedResponseHeaders): void {
     this.onComplete(response, status, headers);
 
-    if (this.uploader.options.removeAfterUpload) {
+    if (this.uploader.getOptions().removeAfterUpload) {
       this.remove();
     }
   }

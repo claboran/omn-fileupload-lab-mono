@@ -40,19 +40,36 @@ export interface FileUploaderOptions {
   formatDataFunction?: Function;
   formatDataFunctionIsAsync?: boolean;
 }
+export interface IFileUploaderMiddleware {
+  _onBeforeUploadItem(item: FileItem): void;
+  _onBuildItemForm(item: FileItem, form: any);
+  _onProgressItem(item: FileItem, progress: any): void;
+  _parseHeaders(headers: string): ParsedResponseHeaders;
+  _transformResponse(response: string, headers: ParsedResponseHeaders): string;
+  _isSuccessCode(status: number): boolean;
+  getOptions(): FileUploaderOptions;
+  _onSuccessItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void;
+  _onErrorItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void;
+  _onCompleteItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void;
+  _onCancelItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void;
+  getAuthToken(): string;
+  getAuthTokenHeader(): string;
+  getResponse(): EventEmitter<any>;
+  _render(): any;
+}
 
-export class FileUploader {
+export class FileUploader implements IFileUploaderMiddleware {
 
-  public authToken: string;
+  private _authToken: string;
   public isUploading = false;
   public queue: FileItem[] = [];
   public progress = 0;
   public _nextIndex = 0;
   public autoUpload: any;
-  public authTokenHeader: string;
-  public response: EventEmitter<any>;
+  private _authTokenHeader: string;
+  private readonly _response: EventEmitter<any>;
 
-  public options: FileUploaderOptions = {
+  private _options: FileUploaderOptions = {
     autoUpload: false,
     isHTML5: true,
     filters: [],
@@ -64,33 +81,34 @@ export class FileUploader {
 
   protected _failFilterIndex: number;
 
-  public constructor(options: FileUploaderOptions) {
+  public constructor(options: FileUploaderOptions,
+                     private fileUploaderMiddlewareFn: (item: FileItem, fileUploader: FileUploader) => any) {
     this.setOptions(options);
-    this.response = new EventEmitter<any>();
+    this._response = new EventEmitter<any>();
   }
 
   public setOptions(options: FileUploaderOptions): void {
-    this.options = Object.assign(this.options, options);
+    this._options = Object.assign(this._options, options);
 
-    this.authToken = this.options.authToken;
-    this.authTokenHeader = this.options.authTokenHeader || 'Authorization';
-    this.autoUpload = this.options.autoUpload;
-    this.options.filters.unshift({ name: 'queueLimit', fn: this._queueLimitFilter });
+    this._authToken = this._options.authToken;
+    this._authTokenHeader = this._options.authTokenHeader || 'Authorization';
+    this.autoUpload = this._options.autoUpload;
+    this._options.filters.unshift({ name: 'queueLimit', fn: this._queueLimitFilter });
 
-    if (this.options.maxFileSize) {
-      this.options.filters.unshift({ name: 'fileSize', fn: this._fileSizeFilter });
+    if (this._options.maxFileSize) {
+      this._options.filters.unshift({ name: 'fileSize', fn: this._fileSizeFilter });
     }
 
-    if (this.options.allowedFileType) {
-      this.options.filters.unshift({ name: 'fileType', fn: this._fileTypeFilter });
+    if (this._options.allowedFileType) {
+      this._options.filters.unshift({ name: 'fileType', fn: this._fileTypeFilter });
     }
 
-    if (this.options.allowedMimeType) {
-      this.options.filters.unshift({ name: 'mimeType', fn: this._mimeTypeFilter });
+    if (this._options.allowedMimeType) {
+      this._options.filters.unshift({ name: 'mimeType', fn: this._mimeTypeFilter });
     }
 
     for (let i = 0; i < this.queue.length; i++) {
-      this.queue[ i ].url = this.options.url;
+      this.queue[ i ].url = this._options.url;
     }
   }
 
@@ -104,7 +122,7 @@ export class FileUploader {
     const addedFileItems: FileItem[] = [];
     list.map((some: File) => {
       if (!options) {
-        options = this.options;
+        options = this._options;
       }
 
       const temp = new FileLikeObject(some);
@@ -123,7 +141,7 @@ export class FileUploader {
       this.progress = this._getTotalProgress();
     }
     this._render();
-    if (this.options.autoUpload) {
+    if (this._options.autoUpload) {
       this.uploadAll();
     }
   }
@@ -148,19 +166,20 @@ export class FileUploader {
   public uploadItem(value: FileItem): void {
     const index = this.getIndexOfItem(value);
     const item = this.queue[ index ];
-    const transport = this.options.isHTML5 ? '_xhrTransport' : '_iframeTransport';
+    const transport = this._options.isHTML5 ? '_xhrTransport' : '_iframeTransport';
     item._prepareToUploading();
     if (this.isUploading) {
       return;
     }
     this.isUploading = true;
-    (this as any)[ transport ](item);
+    // (this as any)[ transport ](item);
+    this.fileUploaderMiddlewareFn(item, this);
   }
 
   public cancelItem(value: FileItem): void {
     const index = this.getIndexOfItem(value);
     const item = this.queue[ index ];
-    const prop = this.options.isHTML5 ? item._xhr : item._form;
+    const prop = this._options.isHTML5 ? item._xhr : item._form;
     if (item && item.isUploading) {
       prop.abort();
     }
@@ -255,16 +274,16 @@ export class FileUploader {
   }
 
   public _mimeTypeFilter(item: FileLikeObject): boolean {
-    return !(this.options.allowedMimeType && this.options.allowedMimeType.indexOf(item.type) === -1);
+    return !(this._options.allowedMimeType && this._options.allowedMimeType.indexOf(item.type) === -1);
   }
 
   public _fileSizeFilter(item: FileLikeObject): boolean {
-    return !(this.options.maxFileSize && item.size > this.options.maxFileSize);
+    return !(this._options.maxFileSize && item.size > this._options.maxFileSize);
   }
 
   public _fileTypeFilter(item: FileLikeObject): boolean {
-    return !(this.options.allowedFileType &&
-      this.options.allowedFileType.indexOf(FileType.getMimeClass(item)) === -1);
+    return !(this._options.allowedFileType &&
+      this._options.allowedFileType.indexOf(FileType.getMimeClass(item)) === -1);
   }
 
   public _onErrorItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void {
@@ -295,99 +314,100 @@ export class FileUploader {
     };
   }
 
-  protected _xhrTransport(item: FileItem): any {
-    const that = this;
-    const xhr = item._xhr = new XMLHttpRequest();
-    let sendable: any;
-    this._onBeforeUploadItem(item);
-
-    if (typeof item._file.size !== 'number') {
-      throw new TypeError('The file specified is no longer valid');
-    }
-    if (!this.options.disableMultipart) {
-      sendable = new FormData();
-      this._onBuildItemForm(item, sendable);
-
-      const appendFile = () => sendable.append(item.alias, item._file, item.file.name);
-      if (!this.options.parametersBeforeFiles) {
-        appendFile();
-      }
-
-      // For AWS, Additional Parameters must come BEFORE Files
-      if (this.options.additionalParameter !== undefined) {
-        Object.keys(this.options.additionalParameter).forEach((key: string) => {
-          let paramVal = this.options.additionalParameter[ key ];
-          // Allow an additional parameter to include the filename
-          if (typeof paramVal === 'string' && paramVal.indexOf('{{file_name}}') >= 0) {
-            paramVal = paramVal.replace('{{file_name}}', item.file.name);
-          }
-          sendable.append(key, paramVal);
-        });
-      }
-
-      if (this.options.parametersBeforeFiles) {
-        appendFile();
-      }
-    } else {
-      sendable = this.options.formatDataFunction(item);
-    }
-
-    xhr.upload.onprogress = (event: any) => {
-      const progress = Math.round(event.lengthComputable ? event.loaded * 100 / event.total : 0);
-      this._onProgressItem(item, progress);
-    };
-    xhr.onload = () => {
-      const headers = this._parseHeaders(xhr.getAllResponseHeaders());
-      const response = this._transformResponse(xhr.response, headers);
-      const gist = this._isSuccessCode(xhr.status) ? 'Success' : 'Error';
-      const method = '_on' + gist + 'Item';
-      (this as any)[ method ](item, response, xhr.status, headers);
-      this._onCompleteItem(item, response, xhr.status, headers);
-    };
-    xhr.onerror = () => {
-      const headers = this._parseHeaders(xhr.getAllResponseHeaders());
-      const response = this._transformResponse(xhr.response, headers);
-      this._onErrorItem(item, response, xhr.status, headers);
-      this._onCompleteItem(item, response, xhr.status, headers);
-    };
-    xhr.onabort = () => {
-      const headers = this._parseHeaders(xhr.getAllResponseHeaders());
-      const response = this._transformResponse(xhr.response, headers);
-      this._onCancelItem(item, response, xhr.status, headers);
-      this._onCompleteItem(item, response, xhr.status, headers);
-    };
-    xhr.open(item.method, item.url, true);
-    xhr.withCredentials = item.withCredentials;
-    if (this.options.headers) {
-      for (const header of this.options.headers) {
-        xhr.setRequestHeader(header.name, header.value);
-      }
-    }
-    if (item.headers.length) {
-      for (const header of item.headers) {
-        xhr.setRequestHeader(header.name, header.value);
-      }
-    }
-    if (this.authToken) {
-      xhr.setRequestHeader(this.authTokenHeader, this.authToken);
-    }
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState == XMLHttpRequest.DONE) {
-        that.response.emit(xhr.responseText)
-      }
-    }
-    if (this.options.formatDataFunctionIsAsync) {
-      sendable.then(
-        (result: any) => xhr.send(JSON.stringify(result))
-      );
-    } else {
-      xhr.send(sendable);
-    }
-    this._render();
-  }
+  // protected _xhrTransport(item: FileItem): any {
+  //   const that = this;
+  //   const xhr = item._xhr = new XMLHttpRequest();
+  //   let sendable: any;
+  //   this._onBeforeUploadItem(item);
+  //
+  //   if (typeof item._file.size !== 'number') {
+  //     throw new TypeError('The file specified is no longer valid');
+  //   }
+  //   if (!this._options.disableMultipart) {
+  //     sendable = new FormData();
+  //     this._onBuildItemForm(item, sendable);
+  //
+  //     const appendFile = () => sendable.append(item.alias, item._file, item.file.name);
+  //     if (!this._options.parametersBeforeFiles) {
+  //       appendFile();
+  //     }
+  //
+  //     // For AWS, Additional Parameters must come BEFORE Files
+  //     if (this._options.additionalParameter !== undefined) {
+  //       Object.keys(this._options.additionalParameter).forEach((key: string) => {
+  //         let paramVal = this._options.additionalParameter[ key ];
+  //         // Allow an additional parameter to include the filename
+  //         if (typeof paramVal === 'string' && paramVal.indexOf('{{file_name}}') >= 0) {
+  //           paramVal = paramVal.replace('{{file_name}}', item.file.name);
+  //         }
+  //         sendable.append(key, paramVal);
+  //       });
+  //     }
+  //
+  //     if (this._options.parametersBeforeFiles) {
+  //       appendFile();
+  //     }
+  //   } else {
+  //     sendable = this._options.formatDataFunction(item);
+  //   }
+  //
+  //   xhr.upload.onprogress = (event: any) => {
+  //     const progress = Math.round(event.lengthComputable ? event.loaded * 100 / event.total : 0);
+  //     this._onProgressItem(item, progress);
+  //   };
+  //   xhr.onload = () => {
+  //     const headers = this._parseHeaders(xhr.getAllResponseHeaders());
+  //     const response = this._transformResponse(xhr.response, headers);
+  //     const gist = this._isSuccessCode(xhr.status) ? 'Success' : 'Error';
+  //     const method = '_on' + gist + 'Item';
+  //     (this as any)[ method ](item, response, xhr.status, headers);
+  //     this._onCompleteItem(item, response, xhr.status, headers);
+  //   };
+  //   xhr.onerror = () => {
+  //     const headers = this._parseHeaders(xhr.getAllResponseHeaders());
+  //     const response = this._transformResponse(xhr.response, headers);
+  //     this._onErrorItem(item, response, xhr.status, headers);
+  //     this._onCompleteItem(item, response, xhr.status, headers);
+  //   };
+  //   xhr.onabort = () => {
+  //     const headers = this._parseHeaders(xhr.getAllResponseHeaders());
+  //     const response = this._transformResponse(xhr.response, headers);
+  //     this._onCancelItem(item, response, xhr.status, headers);
+  //     this._onCompleteItem(item, response, xhr.status, headers);
+  //   };
+  //   xhr.open(item.method, item.url, true);
+  //   xhr.withCredentials = item.withCredentials;
+  //   if (this._options.headers) {
+  //     for (const header of this._options.headers) {
+  //       xhr.setRequestHeader(header.name, header.value);
+  //     }
+  //   }
+  //   if (item.headers.length) {
+  //     for (const header of item.headers) {
+  //       xhr.setRequestHeader(header.name, header.value);
+  //     }
+  //   }
+  //   if (this._authToken) {
+  //     xhr.setRequestHeader(this._authTokenHeader, this._authToken);
+  //   }
+  //   xhr.onreadystatechange = function () {
+  //     if (xhr.readyState === XMLHttpRequest.DONE) {
+  //       that._response.emit(xhr.responseText)
+  //     }
+  //   };
+  //
+  //   if (this._options.formatDataFunctionIsAsync) {
+  //     sendable.then(
+  //       (result: any) => xhr.send(JSON.stringify(result))
+  //     );
+  //   } else {
+  //     xhr.send(sendable);
+  //   }
+  //   this._render();
+  // }
 
   protected _getTotalProgress(value: number = 0): number {
-    if (this.options.removeAfterUpload) {
+    if (this._options.removeAfterUpload) {
       return value;
     }
     const notUploaded = this.getNotUploadedItems().length;
@@ -399,25 +419,25 @@ export class FileUploader {
 
   protected _getFilters(filters: FilterFunction[] | string): FilterFunction[] {
     if (!filters) {
-      return this.options.filters;
+      return this._options.filters;
     }
     if (Array.isArray(filters)) {
       return filters;
     }
     if (typeof filters === 'string') {
       const names = filters.match(/[^\s,]+/g);
-      return this.options.filters
+      return this._options.filters
         .filter((filter: any) => names.indexOf(filter.name) !== -1);
     }
-    return this.options.filters;
+    return this._options.filters;
   }
 
-  protected _render(): any {
+  public _render(): any {
     return void 0;
   }
 
   protected _queueLimitFilter(): boolean {
-    return this.options.queueLimit === undefined || this.queue.length < this.options.queueLimit;
+    return this._options.queueLimit === undefined || this.queue.length < this._options.queueLimit;
   }
 
   protected _isValidFile(file: FileLikeObject, filters: FilterFunction[], options: FileUploaderOptions): boolean {
@@ -428,15 +448,15 @@ export class FileUploader {
     });
   }
 
-  protected _isSuccessCode(status: number): boolean {
+  public _isSuccessCode(status: number): boolean {
     return (status >= 200 && status < 300) || status === 304;
   }
 
-  protected _transformResponse(response: string, headers: ParsedResponseHeaders): string {
+  public _transformResponse(response: string, headers: ParsedResponseHeaders): string {
     return response;
   }
 
-  protected _parseHeaders(headers: string): ParsedResponseHeaders {
+  public _parseHeaders(headers: string): ParsedResponseHeaders {
     const parsed: any = {};
     let key: any;
     let val: any;
@@ -467,17 +487,17 @@ export class FileUploader {
     this.onAfterAddingAll(items);
   }
 
-  protected _onBeforeUploadItem(item: FileItem): void {
+  public _onBeforeUploadItem(item: FileItem): void {
     item._onBeforeUpload();
     this.onBeforeUploadItem(item);
   }
 
-  protected _onBuildItemForm(item: FileItem, form: any): void {
+  public _onBuildItemForm(item: FileItem, form: any): void {
     item._onBuildForm(form);
     this.onBuildItemForm(item, form);
   }
 
-  protected _onProgressItem(item: FileItem, progress: any): void {
+  public _onProgressItem(item: FileItem, progress: any): void {
     const total = this._getTotalProgress(progress);
     this.progress = total;
     item._onProgress(progress);
@@ -486,13 +506,29 @@ export class FileUploader {
     this._render();
   }
 
-  protected _onSuccessItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void {
+  public _onSuccessItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void {
     item._onSuccess(response, status, headers);
     this.onSuccessItem(item, response, status, headers);
   }
 
-  protected _onCancelItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void {
+  public _onCancelItem(item: FileItem, response: string, status: number, headers: ParsedResponseHeaders): void {
     item._onCancel(response, status, headers);
     this.onCancelItem(item, response, status, headers);
+  }
+
+  getOptions(): FileUploaderOptions {
+    return this._options;
+  }
+
+  getAuthToken(): string {
+    return this._authToken;
+  }
+
+  getAuthTokenHeader(): string {
+    return this._authTokenHeader;
+  }
+
+  getResponse(): EventEmitter<any> {
+    return this._response;
   }
 }
