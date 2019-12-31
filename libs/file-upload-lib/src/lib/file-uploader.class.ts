@@ -82,7 +82,7 @@ export class FileUploader implements IFileUploaderMiddleware {
   protected _failFilterIndex: number;
 
   public constructor(options: FileUploaderOptions,
-                     private fileUploaderMiddlewareFn: (item: FileItem, fileUploader: FileUploader) => any) {
+                     private fileUploaderMiddlewareFn: (item: FileItem, fileUploader: IFileUploaderMiddleware) => any) {
     this.setOptions(options);
     this._response = new EventEmitter<any>();
   }
