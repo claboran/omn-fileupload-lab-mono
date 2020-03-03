@@ -1,0 +1,22 @@
+<div class="container">
+  <div class="d-flex flex-column drop-zone__file-list border rounded">
+    <ul class="drop-zone__file-list-items list-group">
+      <li class="list-group-item" *ngFor="let file of filesTransferred">
+        <h5><i class="fas fa-file mr-5"></i>{{file}}</h5>
+      </li>
+    </ul>
+    <div ng2FileDrop
+         class="d-flex justify-content-center align-items-center drop-zone__main"
+         [ngClass]="{'drop-zone__main--over': hasBaseDropZoneOver}"
+         (fileOver)="fileOverBase($event)"
+         [uploader]="fileUploader">
+      <div>
+        <h5>
+          <span>Drop</span>
+          <i class="fas fa-file-import ml-3 mr-3"></i>
+          <span>Zone</span>
+        </h5>
+      </div>
+    </div>
+  </div>
+</div>

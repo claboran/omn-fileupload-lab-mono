@@ -4,8 +4,9 @@ import { FileUploader } from './file-uploader.class';
 
 @Directive({ selector: '[ng2FileSelect]' })
 export class FileSelectDirective {
-  @Input() public uploader: FileUploader;
-  @Output() public onFileSelected: EventEmitter<File[]> = new EventEmitter<File[]>();
+
+  private _uploader: FileUploader;
+  private _onFileSelected: EventEmitter<File[]> = new EventEmitter<File[]>();
 
   protected element: ElementRef;
 
@@ -14,7 +15,7 @@ export class FileSelectDirective {
   }
 
   public getOptions(): any {
-    return this.uploader.options;
+    return this._uploader.getOptions();
   }
 
   public getFilters(): any {
@@ -25,14 +26,24 @@ export class FileSelectDirective {
     return !!this.element.nativeElement.attributes.multiple;
   }
 
+  @Input()
+  set uploader(value: FileUploader) {
+    this._uploader = value;
+  }
+
+  @Output()
+  get onFileSelected(): EventEmitter<File[]> {
+    return this._onFileSelected;
+  }
+
   @HostListener('change')
   public onChange(): any {
-    let files = this.element.nativeElement.files;
-    let options = this.getOptions();
-    let filters = this.getFilters();
+    const files = this.element.nativeElement.files;
+    const options = this.getOptions();
+    const filters = this.getFilters();
 
-    this.uploader.addToQueue(files, options, filters);
-    this.onFileSelected.emit(files);
+    this._uploader.addToQueue(files, options, filters);
+    this._onFileSelected.emit(files);
 
     if (this.isEmptyAfterSelection()) {
       this.element.nativeElement.value = '';

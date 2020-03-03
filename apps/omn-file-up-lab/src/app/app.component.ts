@@ -1,63 +1,68 @@
-import {Component, OnInit} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {ToastrService} from 'ngx-toastr';
 import {WindowRefService} from './window-ref.service';
-import {environment} from '../environments/environment';
-import { FileUploader } from '@omn-file-upload/file-upload-lib';
+import { FileUploader} from '@omn-file-upload/file-upload-lib';
+import { BsModalService } from 'ngx-bootstrap';
+import { FileUploadModalState } from './file-upload-modal/modal-state';
+import { FileUploadModalComponent } from './file-upload-modal/file-upload-modal.component';
+import { tap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { FileUploadXhrService } from './file-upload-xhr.service';
+import { Router } from '@angular/router';
 
-const URL = 'https://glacial-thicket-92226.herokuapp.com/api/files';
 
 @Component({
   selector: 'aup-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'omn-file-upload-lab';
-  public uploader: FileUploader = new FileUploader({
-    url: environment.uploadApi,
-    itemAlias: 'file',
-    removeAfterUpload: true
-  });
 
-  private _filesTransferred: string[] = [];
-  private _hasBaseDropZoneOver = false;
+  private _onSuccessSubscription: Subscription;
+  private _onErrorSubscription: Subscription;
+  private _onCancelSubscription: Subscription;
 
-  constructor(private toastr: ToastrService, private windowRefService: WindowRefService) {}
+  constructor(private toastr: ToastrService,
+              private windowRefService: WindowRefService,
+              private modalService: BsModalService,
+              private fileUploader: FileUploadXhrService,
+              private router: Router) {}
 
   ngOnInit(): void {
 
-    this.windowRefService.nativeWindow.addEventListener('dragover', e => e && e.preventDefault(), false);
-    this.windowRefService.nativeWindow.addEventListener('drop', e => e && e.preventDefault(), false);
+    this._onSuccessSubscription = this.fileUploader.onSuccessItem$.pipe(
+      tap(i => this.toastr.success(`Successfully uploaded file: ${i}`))
+    ).subscribe();
 
-    this.uploader.onAfterAddingFile = (file) => {
-      file.withCredentials = false;
-    };
+    this._onErrorSubscription = this.fileUploader.onErrorItem$.pipe(
+      tap(i => this.toastr.error(`Error for uploaded file: ${i}`))
+    ).subscribe();
 
-    this.uploader.onSuccessItem = (item: any, status: any) => {
-      this.toastr.success(`Successfully uploaded file: ${item.file.name}`);
-      this._filesTransferred.push(item.file.name);
-    };
-
-    this.uploader.onErrorItem = (item: any, status: any) => {
-      this.toastr.error(`Error for uploaded file: ${item.file.name}`);
-    };
-
-    this.uploader.onCancelItem = (item: any, status: any) => {
-      this.toastr.warning(`${item.file.name} canceled!`);
-    };
+    this._onCancelSubscription = this.fileUploader.onCancelItem$.pipe(
+      tap(i => this.toastr.warning(`${i} canceled!`))
+    ).subscribe();
 
   }
 
-  get filesTransferred(): string[] {
-    return this._filesTransferred;
+  get uploader(): FileUploader {
+    return this.fileUploader.uploader;
   }
 
-
-  get hasBaseDropZoneOver(): boolean {
-    return this._hasBaseDropZoneOver;
+  public openInfoModal(): void {
+    const initialState = {
+      fileUploader: this.fileUploader.uploader
+    } as FileUploadModalState;
+    this.modalService.show(FileUploadModalComponent, {initialState});
   }
 
-  public fileOverBase(e: any): void {
-    this._hasBaseDropZoneOver = e;
+  ngOnDestroy(): void {
+    this._onSuccessSubscription.unsubscribe();
+    this._onCancelSubscription.unsubscribe();
+    this._onErrorSubscription.unsubscribe();
+  }
+
+  get currentRoute(): string {
+    return this.router.url;
   }
 }

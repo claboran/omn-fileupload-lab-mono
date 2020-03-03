@@ -1,0 +1,22 @@
+<div class="card">
+  <div class="card-header">
+    <h3><i class="fas fa-info-circle mr-2"></i>File Upload Info</h3>
+  </div>
+  <div class="card-body">
+    <div class="ml-2">
+      <div class="container-fluid" *ngFor="let item of fileUploader.queue">
+        <omn-file-upload-file-upload-info-item [item]="item"></omn-file-upload-file-upload-info-item>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer">
+    <button type="button" class="btn btn-warning global__button"
+            (click)="fileUploader.cancelAll()" [disabled]="!fileUploader.isUploading">
+      <i class="fas fa-ban mr-1"></i>Cancel all
+    </button>
+    <button class="btn btn-outline-primary global__button ml-2"
+            (click)="onClose()">
+      <i class="fas fa-times mr-1"></i>Dismiss
+    </button>
+  </div>
+</div>

@@ -1,8 +1,4 @@
-.app {
-
-  &__button {
-    width: 125px;
-  }
+.drop-zone {
   &__file-list {
     min-height: 600px;
   }
@@ -11,7 +7,7 @@
     width: 100%;
   }
 
-  &__drop-zone {
+  &__main {
     width: 100%;
     background: repeating-linear-gradient(
         45deg,
@@ -22,12 +18,9 @@
     );
     flex-grow: 1;
   }
-
-  &__drop-zone--over {
+  &__main--over {
     border: dotted 5px green;
     flex-grow: 1;
   }
-}
-::ng-deep .modal-dialog {
-  max-width: 900px;
+
 }

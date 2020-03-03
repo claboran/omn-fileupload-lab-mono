@@ -1,4 +1,3 @@
-<!--The content below is only a placeholder and can be replaced.-->
 <div style="text-align:center">
   <h1>
     <i class="fab fa-angular mr-1"></i>Welcome to {{ title }}!<i class="fab fa-angular ml-1"></i>
@@ -8,69 +7,33 @@
   <hr/>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-file-upload mr-2"></i>File Upload Demo</h3>
+      <h5 class="d-inline"><i class="fas fa-file-upload mr-2"></i>File Upload Demo</h5>
+      <ng-container *ngIf="currentRoute == '/away'; else awayTmplt">
+        <button class="d-inline btn btn-outline-primary ml-3" routerLink="/drop">Home</button>
+      </ng-container>
+      <ng-template #awayTmplt>
+        <button class="d-inline btn btn-outline-primary ml-3" routerLink="/away">Away</button>
+      </ng-template>
     </div>
     <div class="d-flex card-body">
       <div>
-        <button class="btn btn-primary app__button" (click)="fileInput.click()">Choose File</button>
+        <button class="btn btn-primary global__button" (click)="fileInput.click()">Choose File</button>
         <input #fileInput type="file" name="image"
                ng2FileSelect
                [uploader]="uploader"
                multiple
                accept="image/x-png,image/gif,image/jpeg" [ngStyle]="{'display': 'none'}"/>
-        <button class="btn btn-success app__button ml-2"
-                (click)="uploader.uploadAll()"
-                [disabled]="!uploader.getNotUploadedItems().length">
-          <i class="fas fa-cloud-upload-alt mr-1"></i>Upload
+        <button type="button"
+                class="btn btn-outline-primary global__button ml-2"
+                (click)="openInfoModal()"
+                [disabled]="!uploader.queue.length">
+          <i class="fas fa-info-circle mr-1"></i>
+          Details
+          <span class="badge badge-danger ml-1">{{uploader.queue.length}}</span>
         </button>
-        <button type="button" class="btn btn-warning app__button ml-2"
-                (click)="uploader.cancelAll()" [disabled]="!uploader.isUploading">
-          <i class="fas fa-ban mr-1"></i>Cancel all
-        </button>
-        <button type="button" class="btn btn-danger app__button ml-2"
-                (click)="uploader.clearQueue()" [disabled]="!uploader.queue.length">
-          <i class="far fa-trash-alt mr-1"></i>Remove all
-        </button>
-      </div>
-      <div class="ml-2">
-        <div class="small">
-          Upload Queue:
-        </div>
-        <div>
-          <span
-            class="badge badge-pill badge-primary small"
-            *ngFor="let item of uploader.queue">
-            {{ item?.file?.name }}
-          </span>
-        </div>
       </div>
     </div>
   </div>
   <hr/>
-  <div>
-    <small><em>Queue Progress:</em></small>
-    <progressbar [striped]="true" [animate]="true" [value]="uploader.progress"></progressbar>
-  </div>
-  <hr/>
-  <div class="d-flex flex-column app__file-list border rounded">
-    <ul class="app__file-list-items list-group">
-          <li class="list-group-item" *ngFor="let file of filesTransferred">
-            <h5><i class="fas fa-file mr-5"></i>{{file}}</h5>
-          </li>
-      </ul>
-      <div ng2FileDrop
-           class="d-flex justify-content-center align-items-center app__drop-zone"
-           [ngClass]="{'app__drop-zone--over': hasBaseDropZoneOver}"
-           (fileOver)="fileOverBase($event)"
-           [uploader]="uploader">
-        <div>
-          <h5>
-            <span>Drop</span>
-            <i class="fas fa-file-import ml-3 mr-3"></i>
-            <span>Zone</span>
-          </h5>
-        </div>
-      </div>
-  </div>
   <router-outlet></router-outlet>
 </div>
