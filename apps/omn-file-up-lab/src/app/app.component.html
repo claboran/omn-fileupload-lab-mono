@@ -7,7 +7,13 @@
   <hr/>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-file-upload mr-2"></i>File Upload Demo</h3>
+      <h5 class="d-inline"><i class="fas fa-file-upload mr-2"></i>File Upload Demo</h5>
+      <ng-container *ngIf="currentRoute == '/away'; else awayTmplt">
+        <button class="d-inline btn btn-outline-primary ml-3" routerLink="/drop">Home</button>
+      </ng-container>
+      <ng-template #awayTmplt>
+        <button class="d-inline btn btn-outline-primary ml-3" routerLink="/away">Away</button>
+      </ng-template>
     </div>
     <div class="d-flex card-body">
       <div>
@@ -29,30 +35,5 @@
     </div>
   </div>
   <hr/>
-  <div>
-    <small><em>Queue Progress:</em></small>
-    <progressbar [striped]="true" [animate]="true" [value]="uploader.progress"></progressbar>
-  </div>
-  <hr/>
-  <div class="d-flex flex-column app__file-list border rounded">
-    <ul class="app__file-list-items list-group">
-          <li class="list-group-item" *ngFor="let file of filesTransferred">
-            <h5><i class="fas fa-file mr-5"></i>{{file}}</h5>
-          </li>
-      </ul>
-      <div ng2FileDrop
-           class="d-flex justify-content-center align-items-center app__drop-zone"
-           [ngClass]="{'app__drop-zone--over': hasBaseDropZoneOver}"
-           (fileOver)="fileOverBase($event)"
-           [uploader]="uploader">
-        <div>
-          <h5>
-            <span>Drop</span>
-            <i class="fas fa-file-import ml-3 mr-3"></i>
-            <span>Zone</span>
-          </h5>
-        </div>
-      </div>
-  </div>
   <router-outlet></router-outlet>
 </div>
