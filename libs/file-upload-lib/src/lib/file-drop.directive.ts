@@ -1,6 +1,9 @@
 import { Directive, EventEmitter, ElementRef, HostListener, Input, Output } from '@angular/core';
 
 import { FileUploader, FileUploaderOptions } from './file-uploader.class';
+import { FileSystemEntry} from './dom.types';
+import { containsDirectory, getDirectoryEntries } from './fs-utils';
+
 
 @Directive({ selector: '[ng2FileDrop]' })
 export class FileDropDirective {
@@ -22,19 +25,62 @@ export class FileDropDirective {
     return {};
   }
 
-  @HostListener('drop', [ '$event' ])
+  private canGetAsEntry(item: any): item is DataTransferItem {
+    return !!item.webkitGetAsEntry;
+  }
+
+  private checkType(files: FileList | DataTransferItemList): void {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      let entry: FileSystemEntry | null = null;
+      if (this.canGetAsEntry(file)) {
+        entry = file.webkitGetAsEntry();
+      }
+      if (!entry) {
+        if (file) {
+          console.log(`It is not an webkit entry: ${(file as File).name}`);
+        }
+      } else { // it seems that we have webkit
+        if (entry.isFile) {
+          console.log(`Webkit entry file: ${entry.name}`);
+        } else if (entry.isDirectory) {
+          console.log(`Webkit entry directory: ${entry.name}`);
+        }
+      }
+    }
+
+
+  }
+
+  @HostListener('drop', ['$event'])
   public onDrop(event: any): void {
     const transfer = this._getTransfer(event);
     if (!transfer) {
       return;
     }
-
     const options = this.getOptions();
     const filters = this.getFilters();
-    this._preventAndStop(event);
+    let checkTransfer: FileList | DataTransferItemList;
+    if (event.dataTransfer.items) { // We have DataTransferItemList
+      checkTransfer = event.dataTransfer.items as DataTransferItemList;
+      if (containsDirectory(checkTransfer)) {
+        getDirectoryEntries(checkTransfer[0]).then(value => {
+          console.log(`We have a length of ${value.length}`);
+          this._uploader.addToQueue(value, options, filters);
+          this._fileOver.emit(false);
+          this._fileDrop.emit(value);
+          this._preventAndStop(event);
+        });
+      }
+      return;
+    } else {
+      checkTransfer = event.dataTransfer.files;
+    }
+    this.checkType(checkTransfer);
     this._uploader.addToQueue(transfer.files, options, filters);
     this._fileOver.emit(false);
     this._fileDrop.emit(transfer.files);
+    this._preventAndStop(event);
   }
 
   @HostListener('dragover', [ '$event' ])
