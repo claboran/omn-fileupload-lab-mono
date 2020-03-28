@@ -1,6 +1,14 @@
 import { Directive, EventEmitter, ElementRef, HostListener, Input, Output } from '@angular/core';
 
 import { FileUploader, FileUploaderOptions } from './file-uploader.class';
+import { FileSystemDirectoryEntry, FileSystemFileEntry } from './dom.types';
+import {
+  dataTransferItemArray2FileSystemEntry,
+  dataTransferItemList2Array,
+  getFileFromFileSystemFileEntry, getFilesFromFileSystemDirectoryEntry,
+  supportDataTransferItem
+} from './fs-utils';
+
 
 @Directive({ selector: '[ng2FileDrop]' })
 export class FileDropDirective {
@@ -22,19 +30,41 @@ export class FileDropDirective {
     return {};
   }
 
-  @HostListener('drop', [ '$event' ])
+  private performDrop(files: File[], event: any): void {
+    const options = this.getOptions();
+    const filters = this.getFilters();
+    this._uploader.addToQueue(files, options, filters);
+    this._fileOver.emit(false);
+    this._fileDrop.emit(files);
+    this._preventAndStop(event);
+  }
+
+  @HostListener('drop', ['$event'])
   public onDrop(event: any): void {
     const transfer = this._getTransfer(event);
     if (!transfer) {
       return;
     }
 
-    const options = this.getOptions();
-    const filters = this.getFilters();
-    this._preventAndStop(event);
-    this._uploader.addToQueue(transfer.files, options, filters);
-    this._fileOver.emit(false);
-    this._fileDrop.emit(transfer.files);
+    if (supportDataTransferItem(transfer)) { // it seems we have a webkit browser
+
+      const dataTransferItems = dataTransferItemList2Array(transfer.items);
+      const fileSystemEntries = dataTransferItemArray2FileSystemEntry(dataTransferItems);
+
+      const files = fileSystemEntries.filter(fse => fse.isFile);
+      const folders = fileSystemEntries.filter(fse => fse.isDirectory);
+
+      files.forEach(f => getFileFromFileSystemFileEntry(f as FileSystemFileEntry)
+        .then(file => this.performDrop([file], event)));
+
+      folders.forEach(f => getFilesFromFileSystemDirectoryEntry(f as FileSystemDirectoryEntry)
+        .then(fileList => this.performDrop(fileList, event)));
+
+    } else { // we have a Safari Browser
+
+      this.performDrop(transfer.files, event);
+
+    }
   }
 
   @HostListener('dragover', [ '$event' ])
