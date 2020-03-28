@@ -1,8 +1,13 @@
 import { Directive, EventEmitter, ElementRef, HostListener, Input, Output } from '@angular/core';
 
 import { FileUploader, FileUploaderOptions } from './file-uploader.class';
-import { FileSystemEntry} from './dom.types';
-import { containsDirectory, getDirectoryEntries } from './fs-utils';
+import { FileSystemDirectoryEntry, FileSystemFileEntry } from './dom.types';
+import {
+  dataTransferItemArray2FileSystemEntry,
+  dataTransferItemList2Array,
+  getFileFromFileSystemFileEntry, getFilesFromFileSystemDirectoryEntry,
+  supportDataTransferItem
+} from './fs-utils';
 
 
 @Directive({ selector: '[ng2FileDrop]' })
@@ -25,31 +30,13 @@ export class FileDropDirective {
     return {};
   }
 
-  private canGetAsEntry(item: any): item is DataTransferItem {
-    return !!item.webkitGetAsEntry;
-  }
-
-  private checkType(files: FileList | DataTransferItemList): void {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      let entry: FileSystemEntry | null = null;
-      if (this.canGetAsEntry(file)) {
-        entry = file.webkitGetAsEntry();
-      }
-      if (!entry) {
-        if (file) {
-          console.log(`It is not an webkit entry: ${(file as File).name}`);
-        }
-      } else { // it seems that we have webkit
-        if (entry.isFile) {
-          console.log(`Webkit entry file: ${entry.name}`);
-        } else if (entry.isDirectory) {
-          console.log(`Webkit entry directory: ${entry.name}`);
-        }
-      }
-    }
-
-
+  private performDrop(files: File[], event: any): void {
+    const options = this.getOptions();
+    const filters = this.getFilters();
+    this._uploader.addToQueue(files, options, filters);
+    this._fileOver.emit(false);
+    this._fileDrop.emit(files);
+    this._preventAndStop(event);
   }
 
   @HostListener('drop', ['$event'])
@@ -58,29 +45,26 @@ export class FileDropDirective {
     if (!transfer) {
       return;
     }
-    const options = this.getOptions();
-    const filters = this.getFilters();
-    let checkTransfer: FileList | DataTransferItemList;
-    if (event.dataTransfer.items) { // We have DataTransferItemList
-      checkTransfer = event.dataTransfer.items as DataTransferItemList;
-      if (containsDirectory(checkTransfer)) {
-        getDirectoryEntries(checkTransfer[0]).then(value => {
-          console.log(`We have a length of ${value.length}`);
-          this._uploader.addToQueue(value, options, filters);
-          this._fileOver.emit(false);
-          this._fileDrop.emit(value);
-          this._preventAndStop(event);
-        });
-      }
-      return;
-    } else {
-      checkTransfer = event.dataTransfer.files;
+
+    if (supportDataTransferItem(transfer)) { // it seems we have a webkit browser
+
+      const dataTransferItems = dataTransferItemList2Array(transfer.items);
+      const fileSystemEntries = dataTransferItemArray2FileSystemEntry(dataTransferItems);
+
+      const files = fileSystemEntries.filter(fse => fse.isFile);
+      const folders = fileSystemEntries.filter(fse => fse.isDirectory);
+
+      files.forEach(f => getFileFromFileSystemFileEntry(f as FileSystemFileEntry)
+        .then(file => this.performDrop([file], event)));
+
+      folders.forEach(f => getFilesFromFileSystemDirectoryEntry(f as FileSystemDirectoryEntry)
+        .then(fileList => this.performDrop(fileList, event)));
+
+    } else { // we have a Safari Browser
+
+      this.performDrop(transfer.files, event);
+
     }
-    this.checkType(checkTransfer);
-    this._uploader.addToQueue(transfer.files, options, filters);
-    this._fileOver.emit(false);
-    this._fileDrop.emit(transfer.files);
-    this._preventAndStop(event);
   }
 
   @HostListener('dragover', [ '$event' ])

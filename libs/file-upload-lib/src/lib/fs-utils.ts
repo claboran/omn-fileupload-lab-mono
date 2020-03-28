@@ -12,6 +12,14 @@ export interface FileWrapper {
   error?: DOMError;
 }
 
+/**
+ * Check if we could get a DataTransferItemList
+ * Safari does not have DataTransferItemList!
+ * @param dataTransfer
+ */
+export const supportDataTransferItem = (dataTransfer: DataTransfer): boolean => !!dataTransfer.items;
+
+
 const readFileAsync = (fsFileEntry: FileSystemFileEntry): Promise<File | FileError> => {
   return new Promise<File>((resolve, reject) => {
     fsFileEntry.file(file => {
@@ -30,30 +38,34 @@ const readDirectoryAsync = (fsDirectoryReader: FileSystemDirectoryReader): Promi
   });
 };
 
-export const containsDirectory = (dtiList: DataTransferItemList): boolean => {
-  let hasDirectory = false;
+export const dataTransferItemArray2FileSystemEntry = (list: DataTransferItem[]) =>
+  list.map(item => item.webkitGetAsEntry() as FileSystemEntry);
+
+export const dataTransferItemList2Array = (dtiList: DataTransferItemList): DataTransferItem[] => {
+  const dtList: DataTransferItem[] = [];
   for (let i = 0; i < dtiList.length; i++) {
-    if ((dtiList[i].webkitGetAsEntry() as FileSystemEntry).isDirectory) {
-      hasDirectory = true;
-    }
+    dtList.push(dtiList[i]);
   }
-  return hasDirectory;
+  return dtList;
 };
 
-export const getDirectoryEntries = (item: DataTransferItem): Promise<File[]> => {
+export const getFileFromFileSystemFileEntry = (item: FileSystemFileEntry): Promise<File> => {
+  return new Promise<File>(resolve => {
+    readFileAsync(item).then((f: File) => {
+      resolve(f);
+    });
+  });
+};
+
+export const getFilesFromFileSystemDirectoryEntry = (item: FileSystemDirectoryEntry): Promise<File[]> => {
   let numberOfExpectedEntries = 0;
   let numberOfReceivedEntries = 0;
-  const fsEntry = item.webkitGetAsEntry() as FileSystemEntry;
-  const dirReader = (fsEntry as FileSystemDirectoryEntry).createReader();
   const entries: File[] = [];
-
   return new Promise<File[]>(resolve => {
-    readDirectoryAsync(dirReader).then((result: FileSystemFileEntry[]) => {
+    readDirectoryAsync(item.createReader()).then((result: FileSystemFileEntry[]) => {
       numberOfExpectedEntries = result.length;
       result.forEach((e: FileSystemFileEntry) => {
-        console.log(`FileSystemFileEntry: ${e.name}`);
         readFileAsync(e).then((f: File) => {
-          console.log(`File: ${f.name}`);
           entries.push(f);
           numberOfReceivedEntries++;
           if (numberOfReceivedEntries === numberOfExpectedEntries) {
@@ -61,5 +73,6 @@ export const getDirectoryEntries = (item: DataTransferItem): Promise<File[]> => 
           }
         });
       });
-    })});
+    });
+  });
 };
