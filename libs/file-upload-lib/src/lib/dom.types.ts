@@ -1,43 +1,43 @@
 export interface FileSystemEntry {
-  name: string,
-  isDirectory: boolean
-  isFile: boolean
+  name: string;
+  isDirectory: boolean;
+  isFile: boolean;
 }
 
 
 export interface FileSystemEntryMetadata {
-  modificationTime?: Date,
-  size?: number
+  modificationTime?: Date;
+  size?: number;
 }
 
 export interface FileSystemDirectoryReader {
   readEntries(
     successCallback: (result: FileSystemEntry[]) => void,
     errorCallback?: (error: DOMError) => void,
-  ): void
+  ): void;
 }
 
 export interface FileSystemFlags {
-  create?: boolean
-  exclusive?: boolean
+  create?: boolean;
+  exclusive?: boolean;
 }
 
 export interface FileSystemDirectoryEntry extends FileSystemEntry {
-  isDirectory: true
-  isFile: false
-  createReader(): FileSystemDirectoryReader
+  isDirectory: true;
+  isFile: false;
+  createReader(): FileSystemDirectoryReader;
   getFile(
     path?: string,
     options?: FileSystemFlags,
     successCallback?: (result: FileSystemFileEntry) => void,
     errorCallback?: (error: DOMError) => void,
-  ): void
+  ): void;
   getDirectory(
     path?: string,
     options?: FileSystemFlags,
     successCallback?: (result: FileSystemDirectoryEntry) => void,
     errorCallback?: (error: DOMError) => void,
-  ): void
+  ): void;
 }
 
 export interface FileError {
@@ -45,10 +45,10 @@ export interface FileError {
 }
 
 export interface FileSystemFileEntry extends FileSystemEntry {
-  isDirectory: false
-  isFile: true
+  isDirectory: false;
+  isFile: true;
   file(
     callback: (file: File) => void,
     errorCallback?: (error: FileError) => void
-  ): void
+  ): void;
 }
