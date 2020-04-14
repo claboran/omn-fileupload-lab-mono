@@ -1,0 +1,8 @@
+.file-upload-info {
+  &__badge {
+    white-space: nowrap;
+    width: 125px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

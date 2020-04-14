@@ -1,6 +1,7 @@
 <div class="row mt-3">
   <div class="col-3 align-content-center">
-    <span class="badge badge-pill badge-primary small">{{ item?.file?.name }}</span>
+    <span class="badge badge-pill badge-primary small file-upload-info__badge"
+          [tooltip]="item?.file?.name">{{ item?.file?.name }}</span>
   </div>
   <div class="col-2 align-content-center">
     <button type="button" class="btn btn-warning btn-sm"

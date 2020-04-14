@@ -17,14 +17,32 @@
     </div>
     <div class="d-flex card-body">
       <div>
-        <button class="btn btn-primary global__button" (click)="fileInput.click()">Choose File</button>
+
+        <button class="btn btn-primary app__button" (click)="directoryInput.click()">
+          <i class="far fa-folder mr-1"></i>
+          Choose Directory
+        </button>
+        <input #directoryInput type="file" name="image"
+               ng2FileSelect
+               [uploader]="uploader"
+               webkitdirectory
+               directory
+               multiple
+               [ngStyle]="{'display': 'none'}"/>
+
+        <button class="btn btn-primary app__button ml-2" (click)="fileInput.click()">
+          <i class="far fa-file mr-1"></i>
+          Choose File
+        </button>
         <input #fileInput type="file" name="image"
                ng2FileSelect
                [uploader]="uploader"
                multiple
-               accept="image/x-png,image/gif,image/jpeg" [ngStyle]="{'display': 'none'}"/>
+               accept="image/x-png,image/gif,image/jpeg"
+               [ngStyle]="{'display': 'none'}"/>
+
         <button type="button"
-                class="btn btn-outline-primary global__button ml-2"
+                class="btn btn-outline-primary app__button ml-2"
                 (click)="openInfoModal()"
                 [disabled]="!uploader.queue.length">
           <i class="fas fa-info-circle mr-1"></i>

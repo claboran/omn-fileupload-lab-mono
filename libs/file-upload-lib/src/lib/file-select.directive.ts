@@ -1,6 +1,13 @@
 import { Directive, EventEmitter, ElementRef, Input, HostListener, Output } from '@angular/core';
 
 import { FileUploader } from './file-uploader.class';
+import {
+  dataTransferItemArray2FileSystemEntry,
+  dataTransferItemList2Array,
+  getFileFromFileSystemFileEntry, getFilesFromFileSystemDirectoryEntry,
+  supportDataTransferItem
+} from './fs-utils';
+import { FileSystemDirectoryEntry, FileSystemFileEntry } from './dom.types';
 
 @Directive({ selector: '[ng2FileSelect]' })
 export class FileSelectDirective {
@@ -36,17 +43,19 @@ export class FileSelectDirective {
     return this._onFileSelected;
   }
 
-  @HostListener('change')
-  public onChange(): any {
-    const files = this.element.nativeElement.files;
+  private performUpload(files: File[]): void {
     const options = this.getOptions();
     const filters = this.getFilters();
-
     this._uploader.addToQueue(files, options, filters);
     this._onFileSelected.emit(files);
-
     if (this.isEmptyAfterSelection()) {
       this.element.nativeElement.value = '';
     }
+  }
+
+  @HostListener('change')
+  public onChange(): any {
+    const files = this.element.nativeElement.files;
+    this.performUpload(files);
   }
 }
