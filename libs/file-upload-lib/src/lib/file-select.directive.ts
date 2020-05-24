@@ -1,13 +1,6 @@
 import { Directive, EventEmitter, ElementRef, Input, HostListener, Output } from '@angular/core';
 
 import { FileUploader } from './file-uploader.class';
-import {
-  dataTransferItemArray2FileSystemEntry,
-  dataTransferItemList2Array,
-  getFileFromFileSystemFileEntry, getFilesFromFileSystemDirectoryEntry,
-  supportDataTransferItem
-} from './fs-utils';
-import { FileSystemDirectoryEntry, FileSystemFileEntry } from './dom.types';
 
 @Directive({ selector: '[ng2FileSelect]' })
 export class FileSelectDirective {
